@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request
+import random
+from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
-# بنك الأسئلة الشامل لمنصة سر التفوق (150 سؤالاً مقسمة بالتساوي: 50 لكل مستوى - التاريخ 2 ثانوي أزهري)
-questions_db = [
+questions_db = {
     # ---------------- مستويات مبتدئ (50 سؤالاً) ----------------
     { "level": "مبتدئ", "question": "ما هي عاصمة مملكة معين في شبه الجزيرة العربية؟", "options": ["مأرب", "قرناو", "ريدان ظفار", "الجابية"], "answer": 1, "explanation": "عاصمة مملكة معين هي مدينة قرناو في منطقة الجوف باليمن." },
     { "level": "مبتدئ", "question": "من هي الملكة التي ورد ذكرها في القرآن الكريم في سورة النمل واشتهرت بحكمها لمملكة سبأ؟", "options": ["زنوبيا", "بلقيس", "السيدة خديجة", "جبلة"], "answer": 1, "explanation": "الملكة بلقيس هي ملكة سبأ الوارد ذكرها في القرآن الكريم." },
@@ -159,7 +159,8 @@ questions_db = [
     { "level": "محترف", "question": "ما هي الأهمية الاستراتيجية لمدينة يثرب زراعياً واقتصادياً في قلب الحجاز؟", "options": ["امتلاكها للواحات الواسعة والمياه الجوفية وكونها محطة عبور تجارية شمالية", "قربها المباشر من سواحل المحيط الأطلسي", "خلوها التام من أي مقومات للحياة", "اعتمادها على التجارة البحرية فقط"], "answer": 0, "explanation": "الواحات والزراعة ومحطة عبور." },
     { "level": "محترف", "question": "عكس الأدب الجاهلي من معلقات ونثر صورة حية وشاملة لروح البيئة والوجدان العربي القديم.", "options": ["صح", "خطأ"], "answer": 0, "explanation": "عبارة صحيحة." }
     ]
-
+    ]
+}
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -167,7 +168,7 @@ def index():
     num_questions = int(request.form.get('num_questions', 5))
     action = request.form.get('action', 'select')
     
-    pool = QUESTIONS_DB.get(level, questions_db["متوسط"])
+    pool = QUESTIONS_DB.get(level, QUESTIONS_DB["متوسط"])
     
     if request.method == 'GET' or action == 'select':
         return render_template_string(MAIN_TEMPLATE, level=level, num_questions=num_questions)

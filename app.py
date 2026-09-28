@@ -158,348 +158,275 @@ questions_db = [
     { "level": "محترف", "question": "كانت المرأة في بعض بطون العرب تحظى بمكانة عالية وريادة كما ظهر في بعض الملكات كبلقيس والزَبّاء.", "options": ["صح", "خطأ"], "answer": 0, "explanation": "عبارة صحيحة تاريخياً." },
     { "level": "محترف", "question": "ما هي الأهمية الاستراتيجية لمدينة يثرب زراعياً واقتصادياً في قلب الحجاز؟", "options": ["امتلاكها للواحات الواسعة والمياه الجوفية وكونها محطة عبور تجارية شمالية", "قربها المباشر من سواحل المحيط الأطلسي", "خلوها التام من أي مقومات للحياة", "اعتمادها على التجارة البحرية فقط"], "answer": 0, "explanation": "الواحات والزراعة ومحطة عبور." },
     { "level": "محترف", "question": "عكس الأدب الجاهلي من معلقات ونثر صورة حية وشاملة لروح البيئة والوجدان العربي القديم.", "options": ["صح", "خطأ"], "answer": 0, "explanation": "عبارة صحيحة." }
-]
+    ]
+}
 
-HTML_TEMPLATE = """
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    level = request.form.get('level', 'متوسط')
+    num_questions = int(request.form.get('num_questions', 5))
+    action = request.form.get('action', 'select')
+    
+    pool = QUESTIONS_DB.get(level, QUESTIONS_DB["متوسط"])
+    
+    if request.method == 'GET' or action == 'select':
+        return render_template_string(MAIN_TEMPLATE, level=level, num_questions=num_questions)
+        
+    elif action == 'generate':
+        selected_questions = random.sample(pool, min(num_questions, len(pool)))
+        return render_template_string(QUIZ_TEMPLATE, level=level, num_questions=len(selected_questions), questions=selected_questions)
+        
+    elif action == 'grade':
+        score = 0
+        total = 0
+        results = []
+        
+        for key in request.form:
+            if key.startswith('q_'):
+                qid = key.split('_')[1]
+                user_ans = request.form.get(key)
+                correct_ans = request.form.get(f'ans_{qid}')
+                prompt = request.form.get(f'prompt_{qid}')
+                
+                total += 1
+                is_correct = (user_ans == correct_ans)
+                if is_correct:
+                    score += 1
+                    
+                results.append({
+                    "id": total,
+                    "prompt": prompt,
+                    "user_ans": user_ans if user_ans else "لم تتم الإجابة",
+                    "correct_ans": correct_ans,
+                    "is_correct": is_correct
+                })
+                
+        return render_template_string(RESULT_TEMPLATE, level=level, score=score, total=total, results=results)
+
+MAIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة سر التفوق التعليمية - صمّم امتحانك</title>
+    <title>منصة سر التفوق - تصميم الامتحان</title>
     <style>
-        body {
-            font-family: 'Cairo', Tahoma, sans-serif;
-            background-color: #f0f4f1;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .card {
-            background: #ffffff;
-            width: 90%;
-            max-width: 650px;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            text-align: center;
-        }
-        .platform-title {
-            color: #718096;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        h2 {
-            color: #1b4332;
-            font-size: 28px;
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        .subtitle {
-            color: #4a5568;
-            font-size: 15px;
-            margin-bottom: 30px;
-        }
-        .section-label-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .section-label {
-            font-weight: bold;
-            color: #2d3748;
-            font-size: 15px;
-        }
-        .section-sublabel {
-            color: #718096;
-            font-size: 13px;
-        }
-        .difficulty-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        .diff-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            background: #fff;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: bold;
-            color: #4a5568;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .diff-btn.active {
-            border-color: #2d6a4f;
-            color: #2d6a4f;
-            background: #f0fdf4;
-        }
-        .slider-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 35px;
-            text-align: right;
-        }
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .badge-count {
-            background: #2d6a4f;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-        input[type="range"] {
-            width: 100%;
-            accent-color: #2d6a4f;
-            cursor: pointer;
-        }
-        .btn-main {
-            background-color: #2d6a4f;
-            color: white;
-            border: none;
-            padding: 15px;
-            font-size: 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            margin-bottom: 12px;
-            transition: background 0.3s;
-        }
-        .btn-main:hover {
-            background-color: #1b4332;
-        }
-        .btn-subscribe {
-            background-color: #38a169;
-            color: white;
-            border: none;
-            padding: 15px;
-            font-size: 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            text-decoration: none;
-            display: block;
-            box-sizing: border-box;
-            transition: background 0.3s;
-        }
-        .btn-subscribe:hover {
-            background-color: #2f855a;
-        }
-
-        .quiz-box, .result-box {
-            display: none;
-            text-align: right;
-        }
-        .question-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1b4332;
-            margin-bottom: 20px;
-        }
-        .option-item {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: block;
-        }
-        .option-item input {
-            margin-left: 10px;
-        }
-
-        /* 🔒 إعدادات طباعة الويب: منع طباعة أي شاشة أخرى وطباعة النتيجة فقط */
-        @media print {
-            body * {
-                visibility: hidden !important;
-            }
-            #result-screen, #result-screen * {
-                visibility: visible !important;
-            }
-            #result-screen {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                display: block !important;
-            }
-            .btn-main {
-                display: none !important; /* إخفاء الأزرار عند الطباعة الفعلية */
-            }
-        }
+        body { font-family: 'Tahoma', sans-serif; background-color: #114b3e; color: #333; margin: 0; padding: 20px; direction: rtl; text-align: right; }
+        .main-card { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .header-badge { text-align: center; color: #d4a373; font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        h2 { text-align: center; color: #114b3e; margin-top: 0; font-size: 26px; }
+        .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
+        .section-title { font-weight: bold; color: #222; font-size: 15px; margin-bottom: 10px; }
+        .levels-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .level-btn { flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fff; cursor: pointer; text-align: center; font-weight: bold; font-size: 14px; transition: 0.3s; }
+        .level-btn input { display: none; }
+        .level-btn.active, .level-btn:hover { border-color: #114b3e; background: #e8f5e9; color: #114b3e; }
+        .slider-container { margin-bottom: 25px; background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: #114b3e; }
+        input[type=range] { width: 100%; accent-color: #114b3e; cursor: pointer; }
+        .start-btn { display: block; width: 100%; background: #114b3e; color: white; padding: 14px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(17,75,62,0.3); transition: 0.3s; text-decoration: none; box-sizing: border-box; }
+        .start-btn:hover { background: #0d382f; }
+        .whatsapp-link-btn { display: block; width: 100%; background: #25d366; color: white; padding: 13px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 15px; text-decoration: none; box-shadow: 0 4px 10px rgba(37,211,102,0.3); transition: 0.3s; margin-top: 15px; box-sizing: border-box; }
+        .whatsapp-link-btn:hover { background: #1ebe57; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <!-- شاشة تصميم الامتحان -->
-        <div id="config-screen">
-            <div class="platform-title">منصة سر التفوق التعليمية ✨</div>
-            <h2>صمّم امتحانك</h2>
-            <div class="subtitle">اختبر معلوماتك الآن بكل سهولة 💡</div>
-
-            <div class="section-label-container">
-                <span class="section-label">اختر مستوى الصعوبة</span>
-                <span class="section-sublabel">اختبار الدرس الاول من مادة التاريخ ٢ ثانوي ازهري</span>
+    <div class="main-card">
+        <div class="header-badge">منصة سر التفوق التعليمية ✨</div>
+        <h2>صمّم امتحانك</h2>
+        <div class="subtitle">اختبر معلوماتك الآن بكل سهولة ⏱️</div>
+        
+        <form method="POST">
+            <input type="hidden" name="action" value="generate">
+            <div class="section-title">اختيار مستوى الصعوبة</div>
+            <div class="levels-container">
+                <label class="level-btn {% if level == 'مبتدئ' %}active{% endif %}">
+                    <input type="radio" name="level" value="مبتدئ" {% if level == 'مبتدئ' %}checked{% endif %} onchange="updateActive(this)"> مبتدئ
+                </label>
+                <label class="level-btn {% if level == 'متوسط' %}active{% endif %}">
+                    <input type="radio" name="level" value="متوسط" {% if level == 'متوسط' %}checked{% endif %} onchange="updateActive(this)"> متوسط
+                </label>
+                <label class="level-btn {% if level == 'محترف' %}active{% endif %}">
+                    <input type="radio" name="level" value="محترف" {% if level == 'محترف' %}checked{% endif %} onchange="updateActive(this)"> محترف ⏱️
+                </label>
             </div>
             
-            <div class="difficulty-container">
-                <button class="diff-btn" onclick="setDiff('مبتدئ', this)">مبتدئ</button>
-                <button class="diff-btn active" onclick="setDiff('متوسط', this)">متوسط</button>
-                <button class="diff-btn" onclick="setDiff('محترف', this)">محترف</button>
-            </div>
-
-            <div class="slider-box">
+            <div class="slider-container">
                 <div class="slider-header">
-                    <span style="font-weight: bold; color: #2d3748;">عدد الأسئلة بالاختبار</span>
-                    <span class="badge-count" id="count-badge">5 أسئلة</span>
+                    <span>عدد الأسئلة بالاختبار</span>
+                    <span id="range-val" style="background: #114b3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 13px;">{{ num_questions }} أسئلة</span>
                 </div>
-                <!-- تم زيادة الحد الأقصى للمدى إلى 50 سؤالاً -->
-                <input type="range" id="questions-range" min="1" max="50" value="5" oninput="updateCount(this.value)">
+                <input type="range" name="num_questions" min="5" max="15" value="{% if num_questions < 5 %}5{% else %}{{ num_questions }}{% endif %}" oninput="document.getElementById('range-val').innerText = this.value + ' أسئلة'">
             </div>
-
-            <button class="btn-main" onclick="startCustomQuiz()">ابدأ مع سر التفوق 🚀</button>
-            <a href="https://wa.me/201221581154?text=مرحباً، أريد الاشتراك في منصة سر التفوق" class="btn-subscribe" target="_blank">🟢 للاشتراك اضغط هنا</a>
-        </div>
-
-        <!-- شاشة عرض الأسئلة -->
-        <div id="quiz-screen" class="quiz-box">
-            <div id="question-container"></div>
-            <button class="btn-main" id="next-q-btn" onclick="nextQuestion()" style="margin-top: 20px;">السؤال التالي</button>
-        </div>
-
-        <!-- شاشة النتيجة (القابلة للطباعة حصراً) -->
-        <div id="result-screen" class="result-box" style="text-align: center;">
-            <div class="platform-title" style="margin-bottom: 5px;">منصة سر التفوق التعليمية - تقرير النتيجة 🏆</div>
-            <h2 id="final-score-title"></h2>
-            <div id="review-list" style="margin-top: 20px; text-align: right; max-height: 400px; overflow-y: auto;"></div>
             
-            <button class="btn-main" onclick="window.print()" style="margin-top: 20px; background-color: #38a169;">🖨️ طباعة شهادة النتيجة</button>
-            <button class="btn-main" onclick="location.reload()" style="margin-top: 10px;">إعادة الضبط والاختبار</button>
-        </div>
+            <button type="submit" class="start-btn">ابدأ مع سر التفوق 🚀</button>
+        </form>
+        
+        <a href="https://wa.me/201221581154?s=t" class="whatsapp-link-btn" target="_blank">💬 للاشتراك اضغط هنا</a>
     </div>
-
     <script>
-        const allQuestions = {{ questions_db | tojson }};
-        let selectedDifficulty = 'متوسط';
-        let selectedCount = 5;
-        let activeQuizQuestions = [];
-        let currentIdx = 0;
-        let userAnswers = {};
-
-        function setDiff(level, btn) {
-            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedDifficulty = level;
-        }
-
-        function updateCount(val) {
-            selectedCount = val;
-            document.getElementById('count-badge').innerText = val + ' أسئلة';
-        }
-
-        function startCustomQuiz() {
-            let filtered = allQuestions.filter(q => q.level === selectedDifficulty);
-            if (filtered.length === 0) filtered = allQuestions;
-            
-            activeQuizQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, selectedCount);
-            
-            document.getElementById('config-screen').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'block';
-            renderCurrentQuestion();
-        }
-
-        function renderCurrentQuestion() {
-            const container = document.getElementById('question-container');
-            const q = activeQuizQuestions[currentIdx];
-            
-            let html = `
-                <div style="font-size: 12px; color: #2d6a4f; font-weight: bold; margin-bottom: 8px;">السؤال ${currentIdx + 1} من ${activeQuizQuestions.length} (${selectedDifficulty})</div>
-                <div class="question-title">${q.question}</div>
-            `;
-
-            q.options.forEach((opt, idx) => {
-                let checked = userAnswers[currentIdx] === idx ? 'checked' : '';
-                html += `
-                    <label class="option-item">
-                        <input type="radio" name="quiz_opt" value="${idx}" ${checked} onclick="userAnswers[currentIdx] = ${idx}">
-                        ${opt}
-                    </label>
-                `;
-            });
-
-            container.innerHTML = html;
-            
-            if (currentIdx === activeQuizQuestions.length - 1) {
-                document.getElementById('next-q-btn').innerText = "عرض النتيجة النهائية";
-            }
-        }
-
-        function nextQuestion() {
-            if (userAnswers[currentIdx] === undefined) {
-                alert('من فضلك اختر إجابة قبل الانتقال للسؤال التالي.');
-                return;
-            }
-            if (currentIdx < activeQuizQuestions.length - 1) {
-                currentIdx++;
-                renderCurrentQuestion();
-            } else {
-                showFinalResult();
-            }
-        }
-
-        function showFinalResult() {
-            document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'block';
-
-            let score = 0;
-            let reviewHtml = '';
-
-            activeQuizQuestions.forEach((q, idx) => {
-                const uAns = userAnswers[idx];
-                const correct = uAns === q.answer;
-                if (correct) score++;
-
-                reviewHtml += `
-                    <div style="background: ${correct ? '#f0fdf4' : '#fef2f2'}; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-right: 4px solid ${correct ? '#2d6a4f' : '#dc2626'};">
-                        <strong>س ${idx+1}:</strong> ${q.question}<br>
-                        <strong>إجابتك:</strong> ${uAns !== undefined ? q.options[uAns] : 'لم تجب'} ${correct ? '✅' : '❌'}<br>
-                        ${!correct ? `<strong>الإجابة الصحيحة:</strong> ${q.options[q.answer]}<br>` : ''}
-                        <small style="color: #666;">${q.explanation}</small>
-                    </div>
-                `;
-            });
-
-            document.getElementById('final-score-title').innerText = `نتيجتك: ${score} من ${activeQuizQuestions.length}`;
-            document.getElementById('review-list').innerHTML = reviewHtml;
+        function updateActive(radio) {
+            document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+            radio.closest('.level-btn').classList.add('active');
         }
     </script>
 </body>
 </html>
 """
 
-@app.route('/')
-def home():
-    return render_template_string(HTML_TEMPLATE, questions_db=questions_db)
+QUIZ_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة سر التفوق - حل الاختبار</title>
+    <style>
+        body { font-family: 'Tahoma', sans-serif; background-color: #114b3e; color: #333; margin: 0; padding: 20px; direction: rtl; text-align: right; }
+        .main-card { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        h2 { text-align: center; color: #114b3e; margin-top: 0; font-size: 26px; }
+        .question-box { background: #fdfdfd; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 10px; border-right: 5px solid #114b3e; }
+        .options-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .option-item { background: #f9f9f9; border: 1px solid #e0e0e0; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .option-item:hover { background: #e8f5e9; border-color: #114b3e; }
+        .option-item input { margin-left: 10px; }
+        .badge-type { display: inline-block; background: #e8f5e9; color: #114b3e; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+        .hint { color: #555; font-size: 13px; margin-top: 10px; background: #f1f8f6; padding: 8px; border-radius: 6px; }
+        .start-btn { display: block; width: 100%; background: #114b3e; color: white; padding: 14px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(17,75,62,0.3); transition: 0.3s; text-decoration: none; box-sizing: border-box; }
+        .start-btn:hover { background: #0d382f; }
+        #timer-box { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; display: none; }
+        @media print {
+            body { display: none !important; }
+        }
+    </style>
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                alert('عذراً، الطباعة غير مسموحة أثناء حل الاختبار!');
+            }
+        });
+
+        {% if level == 'محترف' %}
+        let timeLeft = {{ num_questions }} * 120; // 120 ثانية لكل سؤال
+        
+        function startTimer() {
+            const timerBox = document.getElementById('timer-box');
+            timerBox.style.display = 'block';
+            
+            const timerInterval = setInterval(function() {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                
+                timerBox.innerHTML = `⏱️ الوقت المتبقي: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert('انتهى الوقت المحدد للاختبار!');
+                    document.getElementById('quiz-form').submit();
+                }
+                timeLeft--;
+            }, 1000);
+        }
+        window.onload = startTimer;
+        {% endif %}
+    </script>
+</head>
+<body>
+    <div class="main-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+            <span style="font-size: 14px; color: #555;">المستوى: <strong style="color: #114b3e;">{{ level }}</strong></span>
+            <span style="font-size: 14px; color: #555;">عدد الأسئلة: <strong style="color: #114b3e;">{{ num_questions }}</strong></span>
+        </div>
+
+        <h2>اختبار الدرس الأول الشامل</h2>
+        
+        <div id="timer-box"></div>
+        
+        <form method="POST" id="quiz-form">
+            <input type="hidden" name="action" value="grade">
+            <input type="hidden" name="level" value="{{ level }}">
+            
+            <div style="margin-top: 20px;">
+                {% for q in questions %}
+                    <div class="question-box">
+                        <span class="badge-type">{% if q.type == 'mcq' %}اختيار من متعدد{% else %}صح وخطأ{% endif %}</span>
+                        <p><strong>سؤال {{ loop.index }}:</strong> {{ q.prompt }}</p>
+                        
+                        <input type="hidden" name="prompt_{{ q.id }}" value="{{ q.prompt }}">
+                        <input type="hidden" name="ans_{{ q.id }}" value="{{ q.answer }}">
+                        
+                        <div class="options-list">
+                            {% for opt in q.options %}
+                                <label class="option-item">
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ opt }}"> {{ opt }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="hint">💡 <em>{{ q.hint }}</em></div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <button type="submit" class="start-btn">تسليم الامتحان والتصحيح 📋</button>
+        </form>
+    </div>
+</body>
+</html>
+"""
+
+RESULT_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتيجة الامتحان - سر التفوق</title>
+    <style>
+        body { font-family: 'Tahoma', sans-serif; background-color: #114b3e; color: #333; margin: 0; padding: 20px; direction: rtl; text-align: right; }
+        .main-card { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        h2 { text-align: center; color: #114b3e; margin-top: 0; font-size: 26px; }
+        .score-box { background: #e8f5e9; border: 2px solid #2e7d32; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 25px; }
+        .score-num { font-size: 32px; font-weight: bold; color: #1b5e20; }
+        .res-item { background: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 10px; }
+        .correct { border-right: 5px solid #2e7d32; }
+        .wrong { border-right: 5px solid #c62828; }
+        .start-btn { display: block; width: 100%; background: #114b3e; color: white; padding: 14px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(17,75,62,0.3); transition: 0.3s; text-decoration: none; box-sizing: border-box; }
+        .start-btn:hover { background: #0d382f; }
+        .wa-btn { background: #25d366; margin-top: 10px; display: block; text-align: center; }
+        .wa-btn:hover { background: #1ebe57; }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <h2>نتيجة اختبارك</h2>
+        
+        <div class="score-box">
+            <p style="margin: 0 0 5px 0; font-size: 16px; color: #333;">لقد أتممت الاختبار بنجاح!</p>
+            <div class="score-num">{{ score }} / {{ total }}</div>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">المستوى: {{ level }}</p>
+        </div>
+
+        <h3>تفاصيل الإجابات:</h3>
+        <div style="margin-top: 15px;">
+            {% for r in results %}
+                <div class="res-item {% if r.is_correct %}correct{% else %}wrong{% endif %}">
+                    <p><strong>سؤال {{ r.id }}:</strong> {{ r.prompt }}</p>
+                    <p style="margin: 5px 0; font-size: 14px;">إجابتك: <span style="font-weight: bold; color: {% if r.is_correct %}#2e7d32{% else %}#c62828{% endif %};">{{ r.user_ans }} {% if r.is_correct %}✅{% else %}❌{% endif %}</span></p>
+                    {% if not r.is_correct %}
+                        <p style="margin: 5px 0; font-size: 14px; color: #2e7d32;">الإجابة الصحيحة هي: <strong>{{ r.correct_ans }}</strong></p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="start-btn print-btn" onclick="window.print()" style="background: #455a64; margin-top: 15px;">🖨️ طباعة النتيجة</button>
+        <a href="/" class="start-btn" style="text-align: center; margin-top: 10px;">🔄 تصميم امتحان جديد</a>
+        <a href="https://wa.me/201221581154?s=t" class="start-btn wa-btn" target="_blank">تواصل عبر الواتساب للاشتراك 💬</a>
+    </div>
+</body>
+</html>
+"""
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=5000)

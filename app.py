@@ -359,7 +359,7 @@ QUIZ_TEMPLATE = """
                         <div class="options-list">
                             {% for opt in q.options %}
                                 <label class="option-item">
-                                    <input type="radio" name="q_{{ loop.index }}" value="{{ opt }}"> {{ opt }}
+                                    <input type="radio" name="q_{{ loop.index0 + 1 }}" value="{{ opt }}"> {{ opt }}
                                 </label>
                             {% endfor %}
                         </div>

@@ -1,7 +1,8 @@
 import random
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string, request, redirect, url_for, session
 
 app = Flask(__name__)
+app.secret_key = 'ser_el_tafouk_secret_key' # مفتاح الجلسة لتخزين الأسئلة والإجابات
 
 QUESTIONS_DB = {
     "مبتدئ": [
@@ -158,6 +159,7 @@ QUESTIONS_DB = {
         { "level": "محترف", "prompt": "كانت المرأة في بعض بطون العرب تحظى بمكانة عالية وريادة كما ظهر في بعض الملكات كبلقيس والزَبّاء.", "options": ["صح", "خطأ"], "answer": "صح", "explanation": "عبارة صحيحة تاريخياً." },
         { "level": "محترف", "prompt": "ما هي الأهمية الاستراتيجية لمدينة يثرب زراعياً واقتصادياً في قلب الحجاز؟", "options": ["امتلاكها للواحات الواسعة والمياه الجوفية وكونها محطة عبور تجارية شمالية", "قربها المباشر من سواحل المحيط الأطلسي", "خلوها التام من أي مقومات للحياة", "اعتمادها على التجارة البحرية فقط"], "answer": "امتلاكها للواحات الواسعة والمياه الجوفية وكونها محطة عبور تجارية شمالية", "explanation": "الواحات والزراعة ومحطة عبور." },
         { "level": "محترف", "prompt": "عكس الأدب الجاهلي من معلقات ونثر صورة حية وشاملة لروح البيئة والوجدان العربي القديم.", "options": ["صح", "خطأ"], "answer": "صح", "explanation": "عبارة صحيحة." }
+
     ]
 }
 
@@ -167,41 +169,84 @@ def index():
     num_questions = int(request.form.get('num_questions', 5))
     action = request.form.get('action', 'select')
    
-    pool = QUESTIONS_DB.get(level, QUESTIONS_DB["متوسط"])
+    pool = QUESTIONS_DB.get(level, QUESTIONS_DB.get("متوسط", []))
    
     if request.method == 'GET' or action == 'select':
         return render_template_string(MAIN_TEMPLATE, level=level, num_questions=num_questions)
        
     elif action == 'generate':
         selected_questions = random.sample(pool, min(num_questions, len(pool))) if pool else []
-        return render_template_string(QUIZ_TEMPLATE, level=level, num_questions=len(selected_questions), questions=selected_questions)
+        session['questions'] = selected_questions
+        session['level'] = level
+        session['current_index'] = 0
+        session['user_answers'] = {}
+        return redirect(url_for('quiz_step'))
+
+@app.route('/quiz', methods=['GET', 'POST'])
+def quiz_step():
+    questions = session.get('questions', [])
+    current_index = session.get('current_index', 0)
+    level = session.get('level', 'متوسط')
+   
+    if not questions:
+        return redirect(url_for('index'))
        
-    elif action == 'grade':
-        score = 0
-        total = 0
-        results = []
+    if request.method == 'POST':
+        ans = request.form.get('current_answer')
+        
+        user_answers = session.get('user_answers', {})
+        user_answers[str(current_index)] = {
+            "prompt": questions[current_index]['prompt'],
+            "user_ans": ans if ans else "لم تتم الإجابة",
+            "correct_ans": questions[current_index]['answer'],
+            "is_correct": (ans == questions[current_index]['answer'])
+        }
+        session['user_answers'] = user_answers
        
-        for key in request.form:
-            if key.startswith('q_'):
-                qid = key.split('_')[1]
-                user_ans = request.form.get(key)
-                correct_ans = request.form.get(f'ans_{qid}')
-                prompt = request.form.get(f'prompt_{qid}')
-               
-                total += 1
-                is_correct = (user_ans == correct_ans)
-                if is_correct:
-                    score += 1
-                   
-                results.append({
-                    "id": total,
-                    "prompt": prompt,
-                    "user_ans": user_ans if user_ans else "لم تتم الإجابة",
-                    "correct_ans": correct_ans,
-                    "is_correct": is_correct
-                })
-               
-        return render_template_string(RESULT_TEMPLATE, level=level, score=score, total=total, results=results)
+        current_index += 1
+        session['current_index'] = current_index
+       
+    if current_index >= len(questions):
+        return redirect(url_for('results'))
+       
+    current_question = questions[current_index]
+   
+    return render_template_string(
+        QUIZ_TEMPLATE,
+        level=level,
+        question=current_question,
+        current_num=current_index + 1,
+        total_questions=len(questions),
+        num_questions=len(questions)
+    )
+
+@app.route('/results')
+def results():
+    user_answers = session.get('user_answers', {})
+    level = session.get('level', 'متوسط')
+   
+    score = 0
+    total = len(user_answers)
+    results_list = []
+   
+    for idx, data in sorted(user_answers.items(), key=lambda x: int(x[0])):
+        if data['is_correct']:
+            score += 1
+        results_list.append({
+            "id": int(idx) + 1,
+            "prompt": data['prompt'],
+            "user_ans": data['user_ans'],
+            "correct_ans": data['correct_ans'],
+            "is_correct": data['is_correct']
+        })
+       
+    return render_template_string(
+        RESULT_TEMPLATE,
+        level=level,
+        score=score,
+        total=total,
+        results=results_list
+    )
 
 MAIN_TEMPLATE = """
 <!DOCTYPE html>
@@ -299,77 +344,32 @@ QUIZ_TEMPLATE = """
             body { display: none !important; }
         }
     </style>
-    <script>
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-                e.preventDefault();
-                alert('عذراً، الطباعة غير مسموحة أثناء حل الاختبار!');
-            }
-        });
-
-        {% if level == 'محترف' %}
-        let timeLeft = {{ num_questions }} * 120;
-       
-        function startTimer() {
-            const timerBox = document.getElementById('timer-box');
-            timerBox.style.display = 'block';
-           
-            const timerInterval = setInterval(function() {
-                let minutes = Math.floor(timeLeft / 60);
-                let seconds = timeLeft % 60;
-               
-                timerBox.innerHTML = `⏱️ الوقت المتبقي: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-               
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    alert('انتهى الوقت المحدد للاختبار!');
-                    document.getElementById('quiz-form').submit();
-                }
-                timeLeft--;
-            }, 1000);
-        }
-        window.onload = startTimer;
-        {% endif %}
-    </script>
 </head>
 <body>
     <div class="main-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
             <span style="font-size: 14px; color: #555;">المستوى: <strong style="color: #114b3e;">{{ level }}</strong></span>
-            <span style="font-size: 14px; color: #555;">عدد الأسئلة: <strong style="color: #114b3e;">{{ num_questions }}</strong></span>
+            <span style="font-size: 14px; color: #555;">السؤال: <strong style="color: #114b3e;">{{ current_num }} من {{ total_questions }}</strong></span>
         </div>
 
         <h2>اختبار الدرس الأول الشامل</h2>
        
-        <div id="timer-box"></div>
-       
-        <form method="POST" id="quiz-form">
-            <input type="hidden" name="action" value="grade">
-            <input type="hidden" name="level" value="{{ level }}">
-           
-            <div style="margin-top: 20px;">
-                  <div style="margin-top: 20px;">
-                {% for q in questions %}
-                    <div class="question-box">
-                        <span class="badge-type">{% if q.type == 'mcq' %}اختيار من متعدد{% else %}صح وخطأ{% endif %}</span>
-                        <p><strong>سؤال {{ loop.index }}:</strong> {{ q.prompt }}</p>
-                        
-                        <input type="hidden" name="prompt_{{ q.id }}" value="{{ q.prompt }}">
-                        <input type="hidden" name="ans_{{ q.id }}" value="{{ q.answer }}">
-                        
-                        <div class="options-list">
-                            {% for opt in q.options %}
-                                <label class="option-item">
-                                    <input type="radio" name="q_{{ q.id }}" value="{{ opt }}"> {{ opt }}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        <div class="hint">💡 <em>{{ q.hint }}</em></div>
-                    </div>
-                {% endfor %}
+        <form method="POST" action="{{ url_for('quiz_step') }}" id="quiz-form">
+            <div class="question-box">
+                <span class="badge-type">اختيار من متعدد</span>
+                <p><strong>سؤال {{ current_num }}:</strong> {{ question.prompt }}</p>
+               
+                <div class="options-list">
+                    {% for opt in question.options %}
+                        <label class="option-item">
+                            <input type="radio" name="current_answer" value="{{ opt }}" required> {{ opt }}
+                        </label>
+                    {% endfor %}
+                </div>
+                <div class="hint">💡 <em>{{ question.hint }}</em></div>
             </div>
-            
-            <button type="submit" class="start-btn">تسليم الامتحان والتصحيح 📋</button>
+           
+            <button type="submit" class="start-btn">السؤال التالي ←</button>
         </form>
     </div>
 </body>
@@ -401,7 +401,7 @@ RESULT_TEMPLATE = """
 <body>
     <div class="main-card">
         <h2>نتيجة اختبارك</h2>
-        
+       
         <div class="score-box">
             <p style="margin: 0 0 5px 0; font-size: 16px; color: #333;">لقد أتممت الاختبار بنجاح!</p>
             <div class="score-num">{{ score }} / {{ total }}</div>
@@ -427,6 +427,12 @@ RESULT_TEMPLATE = """
     </div>
 </body>
 </html>
+"""
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+
 """
 
 if __name__ == '__main__':

@@ -71,11 +71,13 @@
             <div class="mb-3">
                 <label for="numQuestions" class="form-label fw-bold">عدد الأسئلة</label>
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span id="questionCountDisplay" class="text-success fw-bold">10 أسئلة</span>
+                    <span id="questionCountDisplay" class="text-success fw-bold">5 أسئلة</span>
                 </div>
-                <!-- شريط الأسئلة يبدأ من 5 إلى 15 -->
-                <input type="range" class="form-range" id="numQuestions" min="5" max="15" step="1" value="10">
-                <div class="d-flex justify-content-between text-muted small px-1">
+                <!-- شريط الأسئلة يبدأ من 5 إلى 15 بشكل مضبوط -->
+                <div dir="ltr">
+                    <input type="range" class="form-range" id="numQuestions" min="5" max="15" step="1" value="5">
+                </div>
+                <div class="d-flex justify-content-between text-muted small px-1 mt-1">
                     <span>5</span>
                     <span>15</span>
                 </div>

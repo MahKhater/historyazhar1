@@ -1,14 +1,10 @@
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-import sys
+from flask import Flask
 
-class CORSRequestHandler(SimpleHTTPRequestHandler):
-    def end_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        super().end_headers()
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "منصة سر التفوق تعمل بنجاح!"
 
 if __name__ == '__main__':
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 10000
-    server_address = ('', port)
-    httpd = HTTPServer(server_address, CORSRequestHandler)
-    print(f"Server running on port {port}")
-    httpd.serve_forever()
+    app.run()

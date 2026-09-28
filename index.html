@@ -1,4 +1,69 @@
-        <!-- قسم صمم امتحانك (اختيار عدد الأسئلة من 5 إلى 15) -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة سر التفوق | مولد الامتحانات الذكي</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        /* تنسيق شريط اختيار الأسئلة */
+        .form-range::-webkit-slider-thumb {
+            background-color: #198754;
+        }
+        .form-range::-moz-range-thumb {
+            background-color: #198754;
+        }
+        
+        /* تنسيق دائرة النسبة المئوية للنتيجة */
+        .score-circle-container {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 6px solid #198754;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.15);
+            margin: 0 auto;
+        }
+
+        .score-circle span {
+            line-height: 1.2;
+        }
+
+        /* تنسيق البانر الدعائي */
+        .promo-banner {
+            background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* الأزرار العامة */
+        .action-buttons .btn {
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        
+        <!-- قسم صمم امتحانك (اختيار عدد الأسئلة من 5 إلى 15 بحد أقصى) -->
         <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
             <h3 class="fw-bold mb-3 text-success">صمّم امتحانك</h3>
             <p class="text-muted mb-4">الدرس الأول: بناء الدولة المصرية واستمرارها عبر التاريخ</p>
@@ -8,7 +73,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span id="questionCountDisplay" class="text-success fw-bold">5 أسئلة</span>
                 </div>
-                <!-- شريط الأسئلة يبدأ بدقة من 5 إلى 15 -->
+                <!-- شريط الأسئلة بحد أقصى 15 -->
                 <div dir="ltr">
                     <input type="range" class="form-range" id="numQuestions" name="num_questions" min="5" max="15" step="1" value="5">
                 </div>
@@ -18,5 +83,68 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-success w-100 py-2 rounded-pill fw-bold">ابدأ مع سر التفوق 🚀</button>
+            <button type="button" class="btn btn-success w-100 py-2 rounded-pill fw-bold">ابدأ مع سر التفوق 🚀</button>
         </div>
+
+
+        <!-- قسم صفحة النتيجة (الشكل الجديد بالدائرة والبانر) -->
+        <div class="card shadow-sm border-0 rounded-4 p-4 text-center">
+            
+            <span class="badge bg-light text-muted mb-2 align-self-center px-3 py-2 rounded-pill">اكتمل التصحيح</span>
+            <h2 class="fw-bold mb-1">نتيجتك جاهزة</h2>
+            <p class="text-muted mb-4">متمكن من أفكار الدرس وتفاصيله</p>
+
+            <!-- دائرة النسبة المئوية -->
+            <div class="score-circle-container mb-3">
+                <div class="score-circle">
+                    <span class="fs-2 fw-bold text-success">100%</span>
+                    <small class="d-block text-muted">النتيجة</small>
+                </div>
+            </div>
+
+            <!-- التقييم والدرجة -->
+            <h4 class="text-success fw-bold mb-1">ممتاز جدًا</h4>
+            <p class="text-muted mb-4">8 من 8 درجة</p>
+
+            <!-- البانر الدعائي -->
+            <div class="promo-banner text-white p-4 rounded-4 mb-4 text-start">
+                <div class="row align-items-center">
+                    <div class="col-md-9 mb-3 mb-md-0 text-md-end text-center">
+                        <h5 class="fw-bold mb-2">الدرس الأول مجرد بداية.. جاهز تتحدى نفسك وتكتشف سر التفوق الحقيقي في باقي المنهج؟ 👑✨</h5>
+                        <p class="mb-0 small opacity-75">لا تكفي درس واحد! انضم للنسخة الكاملة وقت ما قبل بقية الدروس لإنشاء امتحانات لا نهائية متعددة بالذكاء الاصطناعي مع تصحيح وشرح مور لكل سؤال.</p>
+                        <p class="mb-0 small mt-2">التواصل عبر الواتساب فقط: 01221581154</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <!-- زر الواتساب بالرابط ورقمك -->
+                        <a href="https://wa.me/201221581154" target="_blank" class="btn btn-light text-success fw-bold px-4 py-2 rounded-pill shadow-sm">
+                            <i class="fab fa-whatsapp me-2"></i> تواصل عبر الواتساب للاشتراك
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- أزارير التحكم السفلية -->
+            <div class="action-buttons d-flex justify-content-center gap-2 flex-wrap">
+                <a href="#" class="btn btn-success px-4 py-2 rounded-pill">تحميل تقرير النتيجة ↓</a>
+                <a href="#" class="btn btn-outline-secondary px-4 py-2 rounded-pill">طباعة النتيجة 🖨️</a>
+                <a href="#" class="btn btn-outline-dark px-4 py-2 rounded-pill">ابدأ مرة تانية مع سر التفوق ↺</a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS & Script for Range -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const slider = document.getElementById('numQuestions');
+        const display = document.getElementById('questionCountDisplay');
+
+        if (slider && display) {
+            slider.addEventListener('input', function() {
+                display.textContent = this.value + ' أسئلة';
+            });
+        }
+    </script>
+</body>
+</html>

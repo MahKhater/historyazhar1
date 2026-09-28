@@ -3,187 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بنك أسئلة التاريخ - سر التفوق | للثانوية الأزهرية</title>
+    <title>منصة سر التفوق | مولد الامتحانات الذكي</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none; /* حماية ضد النسخ */
-        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8f9fa;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-        header {
-            text-align: center;
-            border-bottom: 3px solid #2e7d32;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-        h1 {
-            color: #2e7d32;
-            margin: 0 0 5px 0;
-            font-size: 26px;
-        }
-        .brand {
-            font-size: 14px;
-            color: #666;
-            font-weight: bold;
-        }
-        .question-card {
-            background: #fafafa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .question-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #1b5e20;
-        }
-        .options label {
-            display: block;
+        
+        /* تنسيق دائرة النسبة المئوية */
+        .score-circle-container {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 6px solid #198754;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             background: #fff;
-            border: 1px solid #ccc;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.15);
+            margin: 0 auto;
         }
-        .options label:hover {
-            background: #e8f5e9;
-            border-color: #4caf50;
+
+        .score-circle span {
+            line-height: 1.2;
         }
-        .options input {
-            margin-left: 10px;
+
+        /* تنسيق البانر الدعائي */
+        .promo-banner {
+            background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-        .btn-submit {
-            background-color: #2e7d32;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            display: block;
-            width: 100%;
-            transition: background 0.3s;
+
+        /* الأزرار العامة */
+        .action-buttons .btn {
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
         }
-        .btn-submit:hover {
-            background-color: #1b5e20;
-        }
-        #result {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
-            display: none;
-        }
-        .correct-answer {
-            color: #2e7d32;
-            background-color: #e8f5e9;
-            border: 1px solid #c8e6c9;
-        }
-        .wrong-answer {
-            color: #c62828;
-            background-color: #ffebee;
-            border: 1px solid #ffcdd2;
+
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>بنك أسئلة مادة التاريخ</h1>
-        <div class="brand">منصة سر التفوق - للثانوية الأزهرية (د. محمود خاطر)</div>
-    </header>
+    <div class="container py-5">
+        <!-- صفحة أو صندوق النتيجة -->
+        <div class="card shadow-sm border-0 rounded-4 p-4 text-center">
+            
+            <span class="badge bg-light text-muted mb-2 align-self-center px-3 py-2 rounded-pill">اكتمل التصحيح</span>
+            <h2 class="fw-bold mb-1">نتيجتك جاهزة</h2>
+            <p class="text-muted mb-4">متمكن من أفكار الدرس وتفاصيله</p>
 
-    <form id="quizForm">
-        <!-- السؤال الأول -->
-        <div class="question-card">
-            <div class="question-title">1. الحملة الفرنسية على مصر والشام: ما هي معركة الحصار البحري التي أثرت بشكل مباشر على إمدادات الفرنسيين؟</div>
-            <div class="options">
-                <label><input type="radio" name="q1" value="a"> أ) معركة أبو قير البحرية</label>
-                <label><input type="radio" name="q1" value="b"> ب) معركة الأهرام</label>
-                <label><input type="radio" name="q1" value="c"> ج) معركة شبراخيت</label>
-                <label><input type="radio" name="q1" value="d"> د) معركة إمبابة</label>
+            <!-- دائرة النسبة المئوية -->
+            <div class="score-circle-container mb-3">
+                <div class="score-circle">
+                    <span class="fs-2 fw-bold text-success">100%</span>
+                    <small class="d-block text-muted">النتيجة</small>
+                </div>
             </div>
-        </div>
 
-        <!-- السؤال الثاني -->
-        <div class="question-card">
-            <div class="question-title">2. تولى محمد علي باشا حكم مصر عام 1805 بناءً على رغبة مين؟</div>
-            <div class="options">
-                <label><input type="radio" name="q2" value="a"> أ) السلطان العثماني منفردًا</label>
-                <label><input type="radio" name="q2" value="b"> ب) زعماء الشعب المصري والعلماء دار المحكمة</label>
-                <label><input type="radio" name="q2" value="c"> ج) المماليك</label>
-                <label><input type="radio" name="q2" value="d"> د) الدول الأوروبية الكبرى</label>
+            <!-- التقييم والدرجة -->
+            <h4 class="text-success fw-bold mb-1">ممتاز جدًا</h4>
+            <p class="text-muted mb-4">8 من 8 درجة</p>
+
+            <!-- البانر الدعائي -->
+            <div class="promo-banner text-white p-4 rounded-4 mb-4 text-start">
+                <div class="row align-items-center">
+                    <div class="col-md-9 mb-3 mb-md-0 text-md-end text-center">
+                        <h5 class="fw-bold mb-2">الدرس الأول مجرد بداية.. جاهز تتحدى نفسك وتكتشف سر التفوق الحقيقي في باقي المنهج؟ 👑✨</h5>
+                        <p class="mb-0 small opacity-75">لا تكفي درس واحد! انضم للنسخة الكاملة وقت ما قبل بقية الدروس لإنشاء امتحانات لا نهائية متعددة بالذكاء الاصطناعي مع تصحيح وشرح مور لكل سؤال.</p>
+                        <p class="mb-0 small mt-2">التواصل عبر الواتساب فقط: 01221581154</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <!-- زر الواتساب برقمك -->
+                        <a href="https://wa.me/201221581154" target="_blank" class="btn btn-light text-success fw-bold px-4 py-2 rounded-pill shadow-sm">
+                            <i class="fab fa-whatsapp me-2"></i> تواصل عبر الواتساب للاشتراك
+                        </a>
+                    </div>
+                </div>
             </div>
+
+            <!-- أزارير التحكم السفلية -->
+            <div class="action-buttons d-flex justify-content-center gap-2 flex-wrap">
+                <a href="#" class="btn btn-success px-4 py-2 rounded-pill">تحميل تقرير النتيجة ↓</a>
+                <a href="#" class="btn btn-outline-secondary px-4 py-2 rounded-pill">طباعة النتيجة 🖨️</a>
+                <a href="#" class="btn btn-outline-dark px-4 py-2 rounded-pill">ابدأ مرة تانية مع سر التفوق ↺</a>
+            </div>
+
         </div>
+    </div>
 
-        <button type="button" class="btn-submit" onclick="calculateScore()">إظهار النتيجة</button>
-    </form>
-
-    <div id="result"></div>
-</div>
-
-<script>
-    function calculateScore() {
-        const answers = {
-            q1: 'a',
-            q2: 'b'
-        };
-
-        let score = 0;
-        let total = Object.keys(answers).length;
-        let allAnswered = true;
-
-        for (let key in answers) {
-            const userSelection = document.querySelector(`input[name="${key}"]:checked`);
-            if (!userSelection) {
-                allAnswered = false;
-                break;
-            }
-            if (userSelection.value === answers[key]) {
-                score++;
-            }
-        }
-
-        const resultDiv = document.getElementById('result');
-        if (!allAnswered) {
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'wrong-answer';
-            resultDiv.innerHTML = '⚠️ برجاء الإجابة على جميع الأسئلة قبل إرسال النموذج!';
-            return;
-        }
-
-        resultDiv.style.display = 'block';
-        if (score === total) {
-            resultDiv.className = 'correct-answer';
-            resultDiv.innerHTML = `🎉 بطل! لقد حصلت على ${score} من ${total}. استمر في سر التفوق!`;
-        } else {
-            resultDiv.className = 'wrong-answer';
-            resultDiv.innerHTML = `💡 لقد حصلت على ${score} من ${total}. راجع المنهج وحاول مرة أخرى!`;
-        }
-    }
-</script>
-
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

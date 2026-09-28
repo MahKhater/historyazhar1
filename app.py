@@ -348,26 +348,27 @@ QUIZ_TEMPLATE = """
             <input type="hidden" name="level" value="{{ level }}">
            
             <div style="margin-top: 20px;">
+                  <div style="margin-top: 20px;">
                 {% for q in questions %}
                     <div class="question-box">
-                        <span class="badge-type">اختيار من متعدد</span>
+                        <span class="badge-type">{% if q.type == 'mcq' %}اختيار من متعدد{% else %}صح وخطأ{% endif %}</span>
                         <p><strong>سؤال {{ loop.index }}:</strong> {{ q.prompt }}</p>
-                       
-                        <input type="hidden" name="prompt_{{ loop.index }}" value="{{ q.prompt }}">
-                        <input type="hidden" name="ans_{{ loop.index }}" value="{{ q.answer }}">
-                       
+                        
+                        <input type="hidden" name="prompt_{{ q.id }}" value="{{ q.prompt }}">
+                        <input type="hidden" name="ans_{{ q.id }}" value="{{ q.answer }}">
+                        
                         <div class="options-list">
                             {% for opt in q.options %}
                                 <label class="option-item">
-                                    <input type="radio" name="q_{{ loop.index0 + 1 }}" value="{{ opt }}"> {{ opt }}
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ opt }}"> {{ opt }}
                                 </label>
                             {% endfor %}
                         </div>
-                        <div class="hint">💡 <em>{{ q.explanation }}</em></div>
+                        <div class="hint">💡 <em>{{ q.hint }}</em></div>
                     </div>
                 {% endfor %}
             </div>
-           
+            
             <button type="submit" class="start-btn">تسليم الامتحان والتصحيح 📋</button>
         </form>
     </div>
@@ -400,7 +401,7 @@ RESULT_TEMPLATE = """
 <body>
     <div class="main-card">
         <h2>نتيجة اختبارك</h2>
-       
+        
         <div class="score-box">
             <p style="margin: 0 0 5px 0; font-size: 16px; color: #333;">لقد أتممت الاختبار بنجاح!</p>
             <div class="score-num">{{ score }} / {{ total }}</div>
@@ -412,7 +413,7 @@ RESULT_TEMPLATE = """
             {% for r in results %}
                 <div class="res-item {% if r.is_correct %}correct{% else %}wrong{% endif %}">
                     <p><strong>سؤال {{ r.id }}:</strong> {{ r.prompt }}</p>
-                    <p style="margin: 5px 0; font-size: 14px;">إجابتك: <span style="font-weight: bold; color: {% if r.is_correct %}#2e7d32{% else %}#c62828{% elif r.user_ans == 'لم تتم الإجابة' %}#e65100{% endif %};">{{ r.user_ans }} {% if r.is_correct %}✅{% else %}❌{% endif %}</span></p>
+                    <p style="margin: 5px 0; font-size: 14px;">إجابتك: <span style="font-weight: bold; color: {% if r.is_correct %}#2e7d32{% else %}#c62828{% endif %};">{{ r.user_ans }} {% if r.is_correct %}✅{% else %}❌{% endif %}</span></p>
                     {% if not r.is_correct %}
                         <p style="margin: 5px 0; font-size: 14px; color: #2e7d32;">الإجابة الصحيحة هي: <strong>{{ r.correct_ans }}</strong></p>
                     {% endif %}

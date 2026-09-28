@@ -168,11 +168,33 @@ questions = [
 
 @app.route('/')
 def home():
-    return jsonify({
-        "status": "success",
-        "message": "منصة سر التفوق تعمل بنجاح",
-        "total_questions": len(questions)
-    })
+    # إرجاع صفحة HTML تفاعلية تعرض بنك الأسئلة لمنصة سر التفوق بدلاً من صيغة JSON الخام
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>منصة سر التفوق - بنك الأسئلة</title>
+        <style>
+            body { font-family: Tahoma, sans-serif; background-color: #f4f7f6; color: #333; text-align: center; padding: 50px; }
+            .container { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); display: inline-block; max-width: 600px; width: 100%; }
+            h1 { color: #2c3e50; }
+            p { font-size: 18px; color: #555; }
+            .btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #3498db; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; }
+            .btn:hover { background: #2980b9; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>مرحباً بك في منصة سر التفوق</h1>
+            <p>بنك الأسئلة والاختبارات الإلكترونية لتاريخ وتراث شبه الجزيرة العربية والسيرة النبوية يعمل بنجاح تام!</p>
+            <p>عدد الأسئلة الجاهزة حالياً: <strong>50 سؤالاً أساسياً</strong></p>
+            <a class="btn" href="/questions" target="_blank">عرض بنك الأسئلة (JSON API)</a>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 @app.route('/questions')
 def get_questions():

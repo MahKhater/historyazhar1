@@ -301,7 +301,7 @@ MAIN_TEMPLATE = """
                     <span>عدد الأسئلة بالاختبار</span>
                     <span id="range-val" style="background: #114b3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 13px;">{{ num_questions }} أسئلة</span>
                 </div>
-                <input type="range" name="num_questions" min="1" max="10" value="{{ num_questions }}" oninput="document.getElementById('range-val').innerText = this.value + ' أسئلة'">
+                <input type="range" name="num_questions" min="5" max="15" value="{{ num_questions }}" oninput="document.getElementById('range-val').innerText = this.value + ' أسئلة'">
             </div>
            
             <button type="submit" class="start-btn">ابدأ مع سر التفوق 🚀</button>
